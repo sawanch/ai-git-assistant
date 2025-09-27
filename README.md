@@ -6,6 +6,7 @@ The 16-GenAI-Project is a Python-based application designed to leverage generati
 - Interactive chat interface
 - Integration with OpenAI's API for advanced AI functionalities
 - Slack notifications for real-time updates
+- Improved project context collection with enhanced comments and formatting for better readability
 
 ## Installation
 To install the necessary dependencies, run the following command:
@@ -34,5 +35,7 @@ pytest
 - Follow PEP 8 coding style standards for Python code to maintain consistency and readability.
 
 ## Features / Changelog
+- **2025-09-27 16:12**: feat: improve project context collection with comments and formatting
 - **2025-09-27 16:08**: feat: update README generation and cleanup process
+- **2025-09-27**: feat: improve project context collection with comments and formatting
 - Placeholder for future updates and feature additions.

@@ -93,9 +93,11 @@ def collect_project_context():
     except Exception:
         ctx["project_name"] = Path.cwd().name
 
+    # requirements
     req = Path("requirements.txt")
     ctx["requirements"] = req.read_text().strip() if req.exists() else ""
 
+    # env keys
     env_keys = []
     for p in [Path(".env.example"), Path(".env")]:
         if p.exists():
@@ -104,7 +106,11 @@ def collect_project_context():
                     env_keys.append(ln.split("=", 1)[0].strip())
     ctx["env_keys"] = sorted(set(env_keys))
 
-    py_files = [p.name for p in Path(".").glob("*.py") if p.name != "ai_git_assistant.py"]
+    # collect main project scripts, but ignore ai_git_assistant.py
+    py_files = [
+        p.name for p in Path(".").glob("*.py")
+        if p.name != "ai_git_assistant.py"
+    ]
     ctx["main_scripts"] = py_files
     return ctx
 
