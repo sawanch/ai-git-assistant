@@ -3,4 +3,5 @@
 - 2025-09-27 10:55: 
 
 ## Features / Changelog
+- **2025-09-27 15:54**: feat: enhance README generation and cleanup process
 - **2025-09-27 15:45**: refactor: improve code organization and README handling
