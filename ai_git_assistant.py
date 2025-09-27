@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import os
-import re
 import sys
 import subprocess
 from datetime import datetime
@@ -12,7 +11,7 @@ import requests
 from openai import OpenAI
 
 # =========================
-# Env + client setup
+# Env setup
 # =========================
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -29,7 +28,7 @@ README_PATH = Path("README.md")
 CHANGELOG_HEADER = "## Features / Changelog"
 
 # =========================
-# Basic helpers
+# Git helpers
 # =========================
 def run(cmd):
     return subprocess.check_output(cmd, text=True).strip()
@@ -71,7 +70,6 @@ Write a Conventional Commit message:
 - Summary line <= 72 chars
 - Optional short body with bullet points
 - Do NOT include markdown code fences or backticks
-- Do NOT wrap the message in quotes
 """
     resp = client.chat.completions.create(
         model=MODEL,
@@ -84,44 +82,20 @@ Write a Conventional Commit message:
     return clean_commit_message(resp.choices[0].message.content)
 
 # =========================
-# README: detection & cleanup
+# README generation / update
 # =========================
-LEGACY_BULLET_RE = re.compile(r"^\s*-\s*\d{4}-\d{2}-\d{2}.*`{3}\s*$")
-
-def looks_legacy_or_broken(text: str) -> bool:
-    # Legacy bullets at top or missing changelog header
-    first_nonblank = next((ln for ln in text.splitlines() if ln.strip()), "")
-    if LEGACY_BULLET_RE.match(first_nonblank):
-        return True
-    if CHANGELOG_HEADER not in text:
-        return True
-    return False
-
-def cleanup_legacy_lines(text: str) -> str:
-    """Remove any leading legacy bullet lines like '- 2025-09-27 … ```' before first header."""
-    lines = text.splitlines()
-    i = 0
-    while i < len(lines) and (not lines[i].strip() or LEGACY_BULLET_RE.match(lines[i])):
-        i += 1
-    return "\n".join(lines[i:]).strip() + "\n"
-
-# =========================
-# README: OpenAI generation
-# =========================
-def collect_project_context() -> dict:
+def collect_project_context():
+    """Collect project name, env keys, requirements, main scripts for README generation."""
     ctx = {}
-    # repo name
     try:
         top = run(["git", "rev-parse", "--show-toplevel"])
         ctx["project_name"] = Path(top).name
     except Exception:
         ctx["project_name"] = Path.cwd().name
 
-    # dependencies
     req = Path("requirements.txt")
     ctx["requirements"] = req.read_text().strip() if req.exists() else ""
 
-    # env keys (from .env.example or .env)
     env_keys = []
     for p in [Path(".env.example"), Path(".env")]:
         if p.exists():
@@ -130,100 +104,112 @@ def collect_project_context() -> dict:
                     env_keys.append(ln.split("=", 1)[0].strip())
     ctx["env_keys"] = sorted(set(env_keys))
 
-    # primary script info
-    main_script = Path("ai_git_assistant.py")
-    ctx["has_ai_assistant"] = main_script.exists()
+    py_files = [p.name for p in Path(".").glob("*.py") if p.name != "ai_git_assistant.py"]
+    ctx["main_scripts"] = py_files
     return ctx
 
 def ask_openai_for_readme(ctx: dict) -> str:
     name = ctx.get("project_name", "Project")
     env_list = "\n".join(f"- `{k}`" for k in ctx.get("env_keys", [])) or "- (none)"
-    req_present = bool(ctx.get("requirements"))
-    usage_block = "python ai_git_assistant.py" if ctx.get("has_ai_assistant") else "python main.py"
+    install_cmd = "pip install -r requirements.txt" if ctx.get("requirements") else "pip install <dependencies>"
+    usage_cmd = f"python {ctx['main_scripts'][0]}" if ctx.get("main_scripts") else "python main.py"
 
-    prompt = f"""Write a professional GitHub README.md in clean Markdown for a Python repo named "{name}".
-Include ONLY these sections in this order:
+    prompt = f"""Write a professional GitHub README.md for a Python project called "{name}".
+Include these sections in this order:
 
 # <Title>
-One-paragraph description (what it does and why).
+One-paragraph description of what the project does.
 
 ## Features
-Short bullets of key capabilities.
+Short bullet list of key capabilities.
 
 ## Installation
-Exact commands to set up (assume Python + pip). If requirements.txt exists, show 'pip install -r requirements.txt'.
+Exact steps to install (use: {install_cmd}).
 
 ## Usage
-Show the primary command a user runs (use: {usage_block}). Explain any flags briefly.
+How to run the project (primary command: {usage_cmd}).
 
 ## Configuration
-List environment variables discovered in the repo:
+Environment variables if needed:
 {env_list}
 
 ## Development
 - How to run locally
 - How to run tests (if any)
-- Coding standards (brief)
+- Coding style standards
 
 ## Features / Changelog
-Add a single bullet placeholder line. Do NOT include code fences around the entire file. Keep formatting tight and readable.
+Add a single placeholder bullet here.
 """
     r = client.chat.completions.create(
         model=MODEL,
         messages=[
-            {"role": "system", "content": "You write excellent, practical READMEs for engineering teams."},
+            {"role": "system", "content": "You write excellent, practical READMEs for real projects."},
             {"role": "user", "content": prompt},
         ],
         temperature=0.2,
     )
     readme = r.choices[0].message.content.strip()
-
-    # Ensure the required header exists
     if CHANGELOG_HEADER not in readme:
         readme += f"\n\n{CHANGELOG_HEADER}\n- _Initial placeholder_\n"
     return readme
 
-def ensure_readme(commit_summary: str):
-    """
-    If README is missing or legacy/broken: generate a new one with OpenAI.
-    Else: clean legacy top bullets if present, keep existing content.
-    Then append a new changelog line.
-    """
+def ask_openai_to_update_readme(current: str, commit_msg: str, diff: str) -> str:
+    prompt = f"""Here is the current README.md:
+
+{current}
+
+Here is the new commit message:
+{commit_msg}
+
+Here is the git diff:
+{diff}
+
+Update the README.md to reflect the new changes.
+- Add new features to the Features section if relevant.
+- Update Usage or Configuration if needed.
+- Do NOT remove existing information.
+- Keep all original sections.
+- Do NOT wrap the file in code fences.
+Return the full updated README.md.
+"""
+    r = client.chat.completions.create(
+        model=MODEL,
+        messages=[
+            {"role": "system", "content": "You update README.md files professionally for software projects."},
+            {"role": "user", "content": prompt},
+        ],
+        temperature=0.2,
+    )
+    return r.choices[0].message.content.strip()
+
+def ensure_readme(commit_msg: str, diff: str):
     ts = datetime.now().strftime("%Y-%m-%d %H:%M")
+    summary = commit_msg.splitlines()[0]
 
     if not README_PATH.exists():
         ctx = collect_project_context()
         readme = ask_openai_for_readme(ctx)
-        with open(README_PATH, "w") as f:
-            f.write(readme.strip() + "\n")
+        README_PATH.write_text(readme + "\n", encoding="utf-8")
     else:
         current = README_PATH.read_text(encoding="utf-8")
-        if looks_legacy_or_broken(current):
-            ctx = collect_project_context()
-            readme = ask_openai_for_readme(ctx)
-            # preserve nothing—replace with clean AI README
-            with open(README_PATH, "w", encoding="utf-8") as f:
-                f.write(readme.strip() + "\n")
-        else:
-            # Clean legacy leading bullets if any (safe idempotent)
-            cleaned = cleanup_legacy_lines(current)
-            with open(README_PATH, "w", encoding="utf-8") as f:
-                f.write(cleaned)
+        updated = ask_openai_to_update_readme(current, commit_msg, diff)
+        README_PATH.write_text(updated + "\n", encoding="utf-8")
 
-    # Append changelog entry
+    # Always append changelog entry
     lines = README_PATH.read_text(encoding="utf-8").splitlines(True)
     output = []
     inserted = False
     for line in lines:
         output.append(line)
         if line.strip() == CHANGELOG_HEADER and not inserted:
-            output.append(f"- **{ts}**: {commit_summary}\n")
+            output.append(f"- **{ts}**: {summary}\n")
             inserted = True
     if not inserted:
         if output and not output[-1].endswith("\n"):
-            output[-1] = output[-1] + "\n"
+            output[-1] += "\n"
         output.append("\n" + CHANGELOG_HEADER + "\n")
-        output.append(f"- **{ts}**: {commit_summary}\n")
+        output.append(f"- **{ts}**: {summary}\n")
 
     README_PATH.write_text("".join(output), encoding="utf-8")
 
@@ -248,8 +234,9 @@ def ensure_env_example():
         return
     p.write_text(
         "# Example .env for AI Git Assistant\n\n"
-        "# Required\nOPENAI_API_KEY=your-openai-api-key\n\n"
-        "# Optional\nSLACK_WEBHOOK_URL=https://hooks.slack.com/services/xxx/yyy/zzz\nMODEL=gpt-4o-mini\n",
+        "OPENAI_API_KEY=your-openai-api-key\n"
+        "SLACK_WEBHOOK_URL=https://hooks.slack.com/services/xxx/yyy/zzz\n"
+        "MODEL=gpt-4o-mini\n",
         encoding="utf-8",
     )
 
@@ -263,11 +250,8 @@ def main():
     commit_msg = ask_openai_for_commit(diff)
     print("\n=== Generated Commit Message ===\n" + commit_msg + "\n")
 
-    # README generation/cleanup + changelog append
-    summary = commit_msg.splitlines()[0]
-    ensure_readme(summary)
+    ensure_readme(commit_msg, diff)
 
-    # Commit + push
     repo.git.add("README.md")
     repo.index.commit(commit_msg)
     try:
