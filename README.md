@@ -1,38 +1,45 @@
-# 16-GenAI-Project
-The 16-GenAI-Project is an innovative Python application designed to leverage generative AI technologies for various tasks, including natural language processing, content generation, and data analysis. This project aims to provide a user-friendly interface for developers and researchers to experiment with and implement AI-driven solutions.
+# Calculator
+
+The Calculator project is a simple yet powerful command-line application that allows users to perform basic arithmetic operations such as addition, subtraction, multiplication, and division. Built with Python, it aims to provide a user-friendly interface for quick calculations.
 
 ## Features
-- Natural language understanding and generation
-- Integration with OpenAI's API for advanced AI capabilities
-- Slack notifications for real-time updates
-- Configurable environment for easy deployment
+- Perform basic arithmetic operations: addition, subtraction, multiplication, and division.
+- Handle floating-point numbers and integer calculations.
+- User-friendly command-line interface.
 
 ## Installation
 To install the necessary dependencies, run the following command:
+
 ```bash
 pip install -r requirements.txt
 ```
 
 ## Usage
 To run the project, execute the following command in your terminal:
+
 ```bash
-python calculator.py
+python main.py
 ```
 
+Follow the prompts to enter your calculations.
+
 ## Configuration
-Before running the project, ensure the following environment variables are set:
-- `MODEL`: Specify the AI model to use (e.g., "gpt-3.5-turbo").
-- `OPENAI_API_KEY`: Your OpenAI API key for authentication.
-- `SLACK_WEBHOOK_URL`: The webhook URL for sending notifications to Slack.
+This project requires the following environment variables to be set:
+
+- `MODEL`: Specify the model to be used for advanced calculations (if applicable).
+- `OPENAI_API_KEY`: Your API key for accessing OpenAI services (if applicable).
+- `SLACK_WEBHOOK_URL`: URL for sending notifications to Slack (if applicable).
 
 ## Development
-- To run the project locally, clone the repository and install the dependencies as described in the Installation section.
+- To run the project locally, ensure you have Python installed and follow the Installation steps above.
 - To run tests, use the following command:
+
 ```bash
 pytest
 ```
-- Follow PEP 8 coding style standards for Python code to maintain consistency and readability.
+
+- This project adheres to PEP 8 coding style standards. Please ensure your code follows these guidelines for consistency.
 
 ## Features / Changelog
-- **2025-09-27 16:13**: docs: remove outdated README.md file
-- Placeholder for future updates and feature enhancements.
+- **2025-09-27 16:15**: docs: remove outdated README.md and rename calculator.py to maiin.py
+- [ ] Add future features and updates here.
