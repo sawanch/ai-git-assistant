@@ -6,6 +6,10 @@ The Calculator project is a simple yet powerful command-line application that al
 - Perform basic arithmetic operations: addition, subtraction, multiplication, and division.
 - Handle floating-point numbers and integer calculations.
 - User-friendly command-line interface.
+- Enhanced functionality with memory storage and scientific functions.
+- Calculation history saving to a file.
+- Reuse of the last result for calculations.
+- Additional operations including square root, sine, cosine, tangent, and random number generation.
 
 ## Installation
 To install the necessary dependencies, run the following command:
@@ -21,7 +25,7 @@ To run the project, execute the following command in your terminal:
 python main.py
 ```
 
-Follow the prompts to enter your calculations.
+Follow the prompts to enter your calculations. You can leave the input blank to reuse the last result. The history of calculations will be saved to a file named `calc_history.txt` upon exiting.
 
 ## Configuration
 This project requires the following environment variables to be set:
@@ -41,5 +45,11 @@ pytest
 - This project adheres to PEP 8 coding style standards. Please ensure your code follows these guidelines for consistency.
 
 ## Features / Changelog
+- **2025-09-27 16:17**: feat: replace simple calculator with enhanced version
 - **2025-09-27 16:15**: docs: remove outdated README.md and rename calculator.py to maiin.py
+- **2025-09-27**: feat: replace simple calculator with enhanced version
+  - Added new features including memory storage and scientific functions
+  - Implemented calculation history saving to a file
+  - Allowed reuse of last result for calculations
+  - Improved user interface with additional operation options
 - [ ] Add future features and updates here.
