@@ -33,5 +33,6 @@ The following environment variables are required:
 - Follow PEP 8 coding standards for consistent code style and readability.
 
 ## Features / Changelog
+- **2025-09-27 15:58**: feat: add simple calculator with multiple operations
 - **2025-09-27 15:55**: docs: remove outdated README file
 - Initial release of the 16-GenAI-Project.
