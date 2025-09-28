@@ -19,7 +19,7 @@ SLACK_WEBHOOK_URL = (os.getenv("SLACK_WEBHOOK_URL") or "").strip()
 MODEL = (os.getenv("MODEL") or "gpt-4o-mini").strip()
 
 if not OPENAI_API_KEY:
-    print("❌ Missing OPENAI_API_KEY in .env")
+    print("Missing OPENAI_API_KEY in .env")
     sys.exit(1)
 
 client = OpenAI(api_key=OPENAI_API_KEY)
@@ -263,13 +263,13 @@ def main():
     try:
         current_branch = repo.active_branch.name
         repo.git.push("origin", current_branch)
-        print(f"✅ Pushed to {current_branch}.")
+        print(f"Pushed to {current_branch}.")
     except Exception as e:
-        print(f"⚠️ Push failed: {e}")
+        print(f"Push failed: {e}")
 
     slack_notify(commit_msg)
     ensure_env_example()
-    print("✅ Done.")
+    print("Done.")
 
 if __name__ == "__main__":
     main()

@@ -3,7 +3,7 @@ import math
 import random
 
 def calculator():
-    print("Welcome to Enhanced Calculator 🚀")
+    print("Welcome to Enhanced Calculator")
 
     history = []        # Store calculation history
     memory = None       # Store memory value
@@ -67,17 +67,17 @@ def calculator():
             elif op == "*":
                 result = num1 * num2
             elif op == "/":
-                result = "Error: Divide by zero ❌" if num2 == 0 else num1 / num2
+                result = "Error: Divide by zero" if num2 == 0 else num1 / num2
             elif op == "**":
                 result = num1 ** num2
             elif op == "%":
                 result = num1 % num2
             elif op == "//":
-                result = "Error: Divide by zero ❌" if num2 == 0 else num1 // num2
+                result = "Error: Divide by zero" if num2 == 0 else num1 // num2
 
             # Scientific functions
             elif op == "sqrt":
-                result = math.sqrt(num1) if num1 >= 0 else "Error: Negative input ❌"
+                result = math.sqrt(num1) if num1 >= 0 else "Error: Negative input"
             elif op == "sin":
                 result = math.sin(math.radians(num1))
             elif op == "cos":
@@ -96,7 +96,7 @@ def calculator():
                 continue
             elif op == "mr":
                 if memory is None:
-                    print("Memory is empty ❌")
+                    print("Memory is empty")
                 else:
                     print("Recalled from memory:", memory)
                 continue
@@ -108,11 +108,11 @@ def calculator():
                     for h in history:
                         print(h)
                 else:
-                    print("History is empty ❌")
+                    print("History is empty")
                 continue
 
             else:
-                print("Invalid operator ❌")
+                print("Invalid operator")
                 continue
 
             # Print and save result
@@ -122,7 +122,7 @@ def calculator():
                 last_result = result
 
         except ValueError:
-            print("Invalid input. Please enter numbers only ❌")
+            print("Invalid input. Please enter numbers only")
 
 if __name__ == "__main__":
     calculator()

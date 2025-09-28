@@ -10,6 +10,7 @@ The Calculator project is a simple yet powerful command-line application that al
 - Calculation history saving to a file.
 - Reuse of the last result for calculations.
 - Additional operations including square root, sine, cosine, tangent, and random number generation.
+- Improved readability by removing unnecessary emojis from print statements.
 
 ## Installation
 To install the necessary dependencies, run the following command:
@@ -45,6 +46,7 @@ pytest
 - This project adheres to PEP 8 coding style standards. Please ensure your code follows these guidelines for consistency.
 
 ## Features / Changelog
+- **2025-09-27 17:35**: chore: remove emojis from print statements for consistency
 - **2025-09-27 16:17**: feat: replace simple calculator with enhanced version
 - **2025-09-27 16:15**: docs: remove outdated README.md and rename calculator.py to maiin.py
 - **2025-09-27**: feat: replace simple calculator with enhanced version
@@ -52,4 +54,5 @@ pytest
   - Implemented calculation history saving to a file
   - Allowed reuse of last result for calculations
   - Improved user interface with additional operation options
+  - Improved readability by removing unnecessary emojis from print statements
 - [ ] Add future features and updates here.
