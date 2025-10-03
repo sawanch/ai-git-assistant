@@ -1,128 +1,126 @@
 #!/usr/bin/env python3
 import math
 import random
+import logging
+from typing import Optional, Union, List, Callable
 
-def calculator():
-    print("Welcome to Enhanced Calculator")
+# Configure logging
+logging.basicConfig(
+    filename="calculator.log",
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
-    history = []        # Store calculation history
-    memory = None       # Store memory value
-    last_result = None  # Store last result for reuse
+Number = Union[int, float]
 
-    while True:
+
+class Calculator:
+    def __init__(self):
+        self.history: List[str] = []
+        self.memory: Optional[Number] = None
+        self.last_result: Optional[Number] = None
+        self.history_file = "calc_history.txt"
+        self.load_history()
+
+        # Map operators to functions
+        self.operations: dict[str, Callable[[Number, Number], Union[Number, str]]] = {
+            "+": lambda a, b: a + b,
+            "-": lambda a, b: a - b,
+            "*": lambda a, b: a * b,
+            "/": lambda a, b: "Error: Divide by zero" if b == 0 else a / b,
+            "**": lambda a, b: a ** b,
+            "%": lambda a, b: a % b,
+            "//": lambda a, b: "Error: Divide by zero" if b == 0 else a // b,
+        }
+
+    def load_history(self):
         try:
-            # Input numbers (allow reuse of last_result if left blank)
-            num1_input = input("\nEnter first number (leave blank for last result): ")
-            if num1_input.strip() == "" and last_result is not None:
-                num1 = last_result
-                print("Using last result:", num1)
-            else:
-                num1 = float(num1_input)
+            with open(self.history_file, "r") as f:
+                self.history = f.read().splitlines()
+        except FileNotFoundError:
+            self.history = []
 
-            num2_input = input("Enter second number (leave blank for last result): ")
-            if num2_input.strip() == "" and last_result is not None:
-                num2 = last_result
-                print("Using last result:", num2)
-            else:
-                num2 = float(num2_input)
+    def save_history(self):
+        with open(self.history_file, "w") as f:
+            f.writelines(h + "\n" for h in self.history)
 
-            # Menu
-            print("\nChoose operation:")
-            print("+   → Addition")
-            print("-   → Subtraction")
-            print("*   → Multiplication")
-            print("/   → Division")
-            print("**  → Power")
-            print("%   → Modulus")
-            print("//  → Floor Division")
-            print("sqrt → Square Root (uses first number)")
-            print("sin  → Sine (first number in degrees)")
-            print("cos  → Cosine (first number in degrees)")
-            print("tan  → Tangent (first number in degrees)")
-            print("rand → Random number [0,1]")
-            print("m+   → Store to memory (num1 op num2)")
-            print("mr   → Recall from memory")
-            print("h    → View History")
-            print("q    → Quit")
+    def run(self):
+        print("Welcome to Production-Ready Calculator 🚀")
+        while True:
+            try:
+                num1 = self._get_number("Enter first number (blank = last result): ")
+                num2 = self._get_number("Enter second number (blank = last result): ")
 
-            op = input("\nEnter operator: ")
+                op = input("\nEnter operator (h=history, q=quit): ").strip()
 
-            if op == "q":
-                print("Exiting calculator. Goodbye! 👋")
-
-                # Save history to file
-                with open("calc_history.txt", "w") as f:
-                    for h in history:
-                        f.write(h + "\n")
-                print("History saved to calc_history.txt ✅")
-                break
-
-            result = None
-
-            # Basic operations
-            if op == "+":
-                result = num1 + num2
-            elif op == "-":
-                result = num1 - num2
-            elif op == "*":
-                result = num1 * num2
-            elif op == "/":
-                result = "Error: Divide by zero" if num2 == 0 else num1 / num2
-            elif op == "**":
-                result = num1 ** num2
-            elif op == "%":
-                result = num1 % num2
-            elif op == "//":
-                result = "Error: Divide by zero" if num2 == 0 else num1 // num2
-
-            # Scientific functions
-            elif op == "sqrt":
-                result = math.sqrt(num1) if num1 >= 0 else "Error: Negative input"
-            elif op == "sin":
-                result = math.sin(math.radians(num1))
-            elif op == "cos":
-                result = math.cos(math.radians(num1))
-            elif op == "tan":
-                result = math.tan(math.radians(num1))
-
-            # Random number
-            elif op == "rand":
-                result = random.random()
-
-            # Memory functions
-            elif op == "m+":
-                memory = num1 + num2
-                print("Saved to memory:", memory)
-                continue
-            elif op == "mr":
-                if memory is None:
-                    print("Memory is empty")
+                if op == "q":
+                    print("Exiting calculator. Goodbye! 👋")
+                    self.save_history()
+                    break
+                elif op == "h":
+                    self._print_history()
+                    continue
+                elif op == "m+":
+                    self.memory = num1 + num2
+                    print("Saved to memory:", self.memory)
+                    continue
+                elif op == "mr":
+                    print("Memory:", self.memory if self.memory is not None else "Empty")
+                    continue
+                elif op in self.operations:
+                    result = self.operations[op](num1, num2)
                 else:
-                    print("Recalled from memory:", memory)
-                continue
+                    result = self._scientific_operations(op, num1)
 
-            # History
-            elif op == "h":
-                if history:
-                    print("\nCalculation History:")
-                    for h in history:
-                        print(h)
-                else:
-                    print("History is empty")
-                continue
+                self._handle_result(op, num1, num2, result)
 
-            else:
-                print("Invalid operator")
-                continue
+            except ValueError:
+                print("Invalid input. Please enter valid numbers.")
+                logging.warning("Invalid numeric input")
+            except Exception as e:
+                print("Unexpected error:", str(e))
+                logging.exception("Unhandled exception")
 
-            # Print and save result
-            print("Result:", result)
-            if not isinstance(result, str):  # Save only valid results
-                history.append(f"{num1} {op} {num2 if op not in ['sqrt','sin','cos','tan','rand'] else ''} = {result}")
-                last_result = result
+    def _get_number(self, prompt: str) -> Number:
+        user_input = input(prompt).strip()
+        if user_input == "" and self.last_result is not None:
+            print("Using last result:", self.last_result)
+            return self.last_result
+        return float(user_input)
 
-        except ValueError:
-            print("Invalid input. Please enter numbers only")
+    def _scientific_operations(self, op: str, num1: Number) -> Union[Number, str, None]:
+        if op == "sqrt":
+            return math.sqrt(num1) if num1 >= 0 else "Error: Negative input"
+        elif op == "sin":
+            return math.sin(math.radians(num1))
+        elif op == "cos":
+            return math.cos(math.radians(num1))
+        elif op == "tan":
+            return math.tan(math.radians(num1))
+        elif op == "rand":
+            return random.random()
+        return None
+
+    def _handle_result(self, op: str, num1: Number, num2: Number, result: Union[Number, str, None]):
+        if result is None:
+            print("Invalid operator")
+            return
+        print("Result:", result)
+        if not isinstance(result, str):
+            record = f"{num1} {op} {num2 if op not in ['sqrt','sin','cos','tan','rand'] else ''} = {result}"
+            self.history.append(record)
+            self.last_result = result
+            logging.info("Calculated: %s", record)
+
+    def _print_history(self):
+        if self.history:
+            print("\nCalculation History:")
+            for h in self.history:
+                print(h)
+        else:
+            print("History is empty")
+
 
 if __name__ == "__main__":
-    calculator()
+    calc = Calculator()
+    calc.run()
