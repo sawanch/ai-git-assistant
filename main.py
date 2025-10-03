@@ -48,10 +48,9 @@ class Calculator:
         print("Welcome to Production-Ready Calculator 🚀")
         while True:
             try:
-                num1 = self._get_number("Enter first number (blank = last result): ")
-                num2 = self._get_number("Enter second number (blank = last result): ")
-
-                op = input("\nEnter operator (h=history, q=quit): ").strip()
+                op = input(
+                    "\nEnter operator (h=history, q=quit, conv=unit conversion): "
+                ).strip()
 
                 if op == "q":
                     print("Exiting calculator. Goodbye! 👋")
@@ -60,7 +59,14 @@ class Calculator:
                 elif op == "h":
                     self._print_history()
                     continue
-                elif op == "m+":
+                elif op == "conv":
+                    self._unit_conversion()
+                    continue
+
+                num1 = self._get_number("Enter first number (blank = last result): ")
+                num2 = self._get_number("Enter second number (blank = last result): ")
+
+                if op == "m+":
                     self.memory = num1 + num2
                     print("Saved to memory:", self.memory)
                     continue
@@ -100,6 +106,40 @@ class Calculator:
         elif op == "rand":
             return random.random()
         return None
+
+    def _unit_conversion(self):
+        print("\nUnit Conversion Options:")
+        print("1. Kilometers → Miles")
+        print("2. Miles → Kilometers")
+        print("3. Celsius → Fahrenheit")
+        print("4. Fahrenheit → Celsius")
+        print("5. Kilograms → Pounds")
+        print("6. Pounds → Kilograms")
+
+        choice = input("Choose an option (1-6): ").strip()
+        try:
+            value = float(input("Enter value to convert: "))
+
+            conversions = {
+                "1": (lambda v: v * 0.621371, "miles"),
+                "2": (lambda v: v / 0.621371, "km"),
+                "3": (lambda v: (v * 9 / 5) + 32, "°F"),
+                "4": (lambda v: (v - 32) * 5 / 9, "°C"),
+                "5": (lambda v: v * 2.20462, "lbs"),
+                "6": (lambda v: v / 2.20462, "kg"),
+            }
+
+            if choice in conversions:
+                func, unit = conversions[choice]
+                result = func(value)
+                print(f"Converted: {result:.4f} {unit}")
+                record = f"Conversion {value} -> {result:.4f} {unit}"
+                self.history.append(record)
+                logging.info(record)
+            else:
+                print("Invalid choice")
+        except ValueError:
+            print("Invalid number for conversion")
 
     def _handle_result(self, op: str, num1: Number, num2: Number, result: Union[Number, str, None]):
         if result is None:
